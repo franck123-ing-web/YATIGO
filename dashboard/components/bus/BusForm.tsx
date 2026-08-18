@@ -29,8 +29,10 @@ export interface BusFormData {
 }
 
 interface BusFormProps {
+  initialData?: Partial<BusFormData>;
+  mode?: "create" | "edit";
   onCancel?: () => void;
-  onSubmit?: (data: BusFormData) => void;
+  onSubmit?: (data: BusFormData) => void | Promise<void>;
 }
 
 type BusFormErrors = Partial<
@@ -51,12 +53,25 @@ const initialFormData: BusFormData = {
   nombre_sieges_par_rangee: "",
 };
 
+function buildInitialFormData(
+  initialData?: Partial<BusFormData>,
+): BusFormData {
+  return {
+    ...initialFormData,
+    ...initialData,
+  };
+}
+
 export function BusForm({
+  initialData,
+  mode = "create",
   onCancel,
   onSubmit,
 }: BusFormProps) {
   const [formData, setFormData] =
-    useState<BusFormData>(initialFormData);
+  useState<BusFormData>(
+    buildInitialFormData(initialData),
+  );
 
   const [errors, setErrors] =
     useState<BusFormErrors>({});
@@ -147,11 +162,11 @@ export function BusForm({
 
     setIsSubmitting(true);
 
-    try {
-      onSubmit?.(formData);
-    } finally {
-      setIsSubmitting(false);
-    }
+try {
+  await onSubmit?.(formData);
+} finally {
+  setIsSubmitting(false);
+}
   };
 
   return (
@@ -441,28 +456,30 @@ export function BusForm({
           </button>
 
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? (
-              <>
-                <span
-                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-                  aria-hidden="true"
-                />
-                Enregistrement...
-              </>
-            ) : (
-              <>
-                <Save
-                  className="h-4 w-4"
-                  aria-hidden="true"
-                />
-                Enregistrer le bus
-              </>
-            )}
-          </button>
+  type="submit"
+  disabled={isSubmitting}
+  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  {isSubmitting ? (
+    <>
+      <span
+        className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+        aria-hidden="true"
+      />
+      Enregistrement...
+    </>
+  ) : (
+    <>
+      <Save
+        className="h-4 w-4"
+        aria-hidden="true"
+      />
+      {mode === "edit"
+        ? "Enregistrer les modifications"
+        : "Enregistrer le bus"}
+    </>
+  )}
+</button>
         </div>
       </div>
     </form>
