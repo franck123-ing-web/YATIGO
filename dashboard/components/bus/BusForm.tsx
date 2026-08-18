@@ -1,293 +1,529 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { ArrowLeft, Save } from "lucide-react";
 
-import type { Bus } from "@/types/bus";
-import {
-  busFormSchema,
-  type BusFormValues,
-} from "@/lib/validations/bus";
+import { BusFeatureCard } from "./BusFeatureCard";
+import { BusStatusSelector } from "./BusStatusSelector";
+import { BusTypeSelector } from "./BusTypeSelector";
 
-interface BusFormProps {
-  bus?: Bus;
-  onSubmit: (data: BusFormValues) => Promise<void>;
-  onCancel: () => void;
+type BusStatus =
+  | "DISPONIBLE"
+  | "MAINTENANCE"
+  | "HORS_SERVICE";
+
+type BusType = "VIP" | "CLASSIQUE";
+
+export interface BusFormData {
+  numero_immatriculation: string;
+  nom_commercial: string;
+  modele: string;
+  capacite: string;
+  etat: BusStatus;
+  type: BusType;
+  climatisation: boolean;
+  wifi: boolean;
+  prise_usb: boolean;
+  inclinaison_sieges: boolean;
+  nombre_sieges_par_rangee: string;
 }
 
-/**
- * Formulaire réutilisable pour créer ou modifier un bus.
- *
- * La communication avec le Backend est volontairement gérée
- * par le composant parent.
- */
-export function BusForm({
-  bus,
-  onSubmit,
-  onCancel,
-}: BusFormProps) {
-  const isEditing = Boolean(bus);
+interface BusFormProps {
+  onCancel?: () => void;
+  onSubmit?: (data: BusFormData) => void;
+}
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<BusFormValues>({
-    resolver: zodResolver(busFormSchema),
-    defaultValues: {
-      numero_immatriculation: bus?.numero_immatriculation ?? "",
-      nom_commercial: bus?.nom_commercial ?? "",
-      modele: bus?.modele ?? "",
-      capacite: bus?.capacite ?? 1,
-      type: bus?.type ?? "CLASSIQUE",
-      climatisation: bus?.climatisation ?? false,
-      wifi: bus?.wifi ?? false,
-      prise_usb: bus?.prise_usb ?? false,
-      inclinaison_sieges: bus?.inclinaison_sieges ?? false,
-      nombre_sieges_par_rangee:
-        bus?.nombre_sieges_par_rangee ?? 1,
-    },
-  });
+type BusFormErrors = Partial<
+  Record<keyof BusFormData, string>
+>;
+
+const initialFormData: BusFormData = {
+  numero_immatriculation: "",
+  nom_commercial: "",
+  modele: "",
+  capacite: "",
+  etat: "DISPONIBLE",
+  type: "CLASSIQUE",
+  climatisation: false,
+  wifi: false,
+  prise_usb: false,
+  inclinaison_sieges: false,
+  nombre_sieges_par_rangee: "",
+};
+
+export function BusForm({
+  onCancel,
+  onSubmit,
+}: BusFormProps) {
+  const [formData, setFormData] =
+    useState<BusFormData>(initialFormData);
+
+  const [errors, setErrors] =
+    useState<BusFormErrors>({});
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const updateField = <K extends keyof BusFormData>(
+    field: K,
+    value: BusFormData[K],
+  ) => {
+    setFormData((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined,
+    }));
+  };
+
+  const validate = (): boolean => {
+    const nextErrors: BusFormErrors = {};
+
+    const immatriculation =
+      formData.numero_immatriculation.trim();
+
+    if (!immatriculation) {
+      nextErrors.numero_immatriculation =
+        "Le numéro d'immatriculation est obligatoire.";
+    } else if (immatriculation.length > 50) {
+      nextErrors.numero_immatriculation =
+        "Le numéro d'immatriculation ne peut pas dépasser 50 caractères.";
+    }
+
+    if (formData.nom_commercial.length > 100) {
+      nextErrors.nom_commercial =
+        "Le nom commercial ne peut pas dépasser 100 caractères.";
+    }
+
+    if (formData.modele.length > 100) {
+      nextErrors.modele =
+        "Le modèle ne peut pas dépasser 100 caractères.";
+    }
+
+    const capacite = Number(formData.capacite);
+
+    if (!formData.capacite) {
+      nextErrors.capacite =
+        "La capacité est obligatoire.";
+    } else if (
+      !Number.isInteger(capacite) ||
+      capacite <= 0
+    ) {
+      nextErrors.capacite =
+        "La capacité doit être un nombre entier supérieur à 0.";
+    }
+
+    const siegesParRangee = Number(
+      formData.nombre_sieges_par_rangee,
+    );
+
+    if (!formData.nombre_sieges_par_rangee) {
+      nextErrors.nombre_sieges_par_rangee =
+        "Le nombre de sièges par rangée est obligatoire.";
+    } else if (
+      !Number.isInteger(siegesParRangee) ||
+      siegesParRangee <= 0
+    ) {
+      nextErrors.nombre_sieges_par_rangee =
+        "Le nombre de sièges par rangée doit être un nombre entier supérieur à 0.";
+    }
+
+    setErrors(nextErrors);
+
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+
+    if (!validate()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      onSubmit?.(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-6"
     >
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">
-          {isEditing ? "Modifier le bus" : "Ajouter un bus"}
-        </h2>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Renseignez les informations principales du véhicule.
-        </p>
-      </div>
-
       {/* Informations générales */}
-      <section className="space-y-4">
-        <h3 className="font-medium text-gray-900">
-          Informations générales
-        </h3>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+              <span
+                className="text-lg"
+                aria-hidden="true"
+              >
+                🚌
+              </span>
+            </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label
-              htmlFor="numero_immatriculation"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Immatriculation *
-            </label>
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                Informations du véhicule
+              </h2>
 
-            <input
-              id="numero_immatriculation"
-              type="text"
-              {...register("numero_immatriculation")}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-            />
-
-            {errors.numero_immatriculation && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.numero_immatriculation.message}
+              <p className="mt-1 text-sm text-slate-500">
+                Renseignez les informations principales du bus.
               </p>
-            )}
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label
-              htmlFor="nom_commercial"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Nom commercial
-            </label>
-
+        <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
+          <FormField
+            label="Numéro d'immatriculation"
+            required
+            error={errors.numero_immatriculation}
+          >
             <input
-              id="nom_commercial"
               type="text"
-              {...register("nom_commercial")}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              value={formData.numero_immatriculation}
+              onChange={(event) =>
+                updateField(
+                  "numero_immatriculation",
+                  event.target.value,
+                )
+              }
+              placeholder="Ex. LT-123-AA"
+              maxLength={50}
+              autoComplete="off"
+              className={inputClass(
+                Boolean(errors.numero_immatriculation),
+              )}
             />
+          </FormField>
 
-            {errors.nom_commercial && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.nom_commercial.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="modele"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Modèle
-            </label>
-
+          <FormField
+            label="Nom commercial"
+            error={errors.nom_commercial}
+            hint="Nom utilisé pour identifier facilement le bus."
+          >
             <input
-              id="modele"
               type="text"
-              {...register("modele")}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              value={formData.nom_commercial}
+              onChange={(event) =>
+                updateField(
+                  "nom_commercial",
+                  event.target.value,
+                )
+              }
+              placeholder="Ex. Express VIP"
+              maxLength={100}
+              className={inputClass(
+                Boolean(errors.nom_commercial),
+              )}
             />
+          </FormField>
 
-            {errors.modele && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.modele.message}
-              </p>
-            )}
-          </div>
+          <FormField
+            label="Modèle"
+            error={errors.modele}
+            hint="Modèle du véhicule."
+          >
+            <input
+              type="text"
+              value={formData.modele}
+              onChange={(event) =>
+                updateField(
+                  "modele",
+                  event.target.value,
+                )
+              }
+              placeholder="Ex. Mercedes Sprinter"
+              maxLength={100}
+              className={inputClass(
+                Boolean(errors.modele),
+              )}
+            />
+          </FormField>
 
-          <div>
-            <label
-              htmlFor="type"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Type *
-            </label>
+          <FormField
+            label="Capacité"
+            required
+            error={errors.capacite}
+            hint="Nombre total de places prévues."
+          >
+            <div className="relative">
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={formData.capacite}
+                onChange={(event) =>
+                  updateField(
+                    "capacite",
+                    event.target.value,
+                  )
+                }
+                placeholder="30"
+                className={`${inputClass(
+                  Boolean(errors.capacite),
+                )} pr-16`}
+              />
 
-            <select
-              id="type"
-              {...register("type")}
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-            >
-              <option value="CLASSIQUE">Classique</option>
-              <option value="VIP">VIP</option>
-            </select>
-          </div>
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400">
+                places
+              </span>
+            </div>
+          </FormField>
         </div>
       </section>
 
-      {/* Capacité */}
-      <section className="space-y-4">
-        <h3 className="font-medium text-gray-900">
-          Configuration des sièges
-        </h3>
+      {/* Type du bus */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+          <h2 className="text-base font-semibold text-slate-900">
+            Type de service
+          </h2>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label
-              htmlFor="capacite"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Capacité *
-            </label>
+          <p className="mt-1 text-sm text-slate-500">
+            Choisissez le type de service proposé par ce bus.
+          </p>
+        </div>
 
+        <div className="p-5 sm:p-6">
+          <BusTypeSelector
+            value={formData.type}
+            onChange={(value) =>
+              updateField("type", value)
+            }
+          />
+        </div>
+      </section>
+
+      {/* État du bus */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+          <h2 className="text-base font-semibold text-slate-900">
+            État du véhicule
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Indiquez l'état actuel du bus.
+          </p>
+        </div>
+
+        <div className="p-5 sm:p-6">
+          <BusStatusSelector
+            value={formData.etat}
+            onChange={(value) =>
+              updateField("etat", value)
+            }
+          />
+        </div>
+      </section>
+
+      {/* Configuration des sièges */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+          <h2 className="text-base font-semibold text-slate-900">
+            Configuration des sièges
+          </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Ces informations serviront à configurer les places
+            du bus.
+          </p>
+        </div>
+
+        <div className="max-w-md p-5 sm:p-6">
+          <FormField
+            label="Nombre de sièges par rangée"
+            required
+            error={errors.nombre_sieges_par_rangee}
+            hint="Cette valeur facilite la création des sièges et ne détermine pas à elle seule la capacité."
+          >
             <input
-              id="capacite"
               type="number"
-              min="1"
-              {...register("capacite", { valueAsNumber: true })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+              min={1}
+              step={1}
+              value={formData.nombre_sieges_par_rangee}
+              onChange={(event) =>
+                updateField(
+                  "nombre_sieges_par_rangee",
+                  event.target.value,
+                )
+              }
+              placeholder="Ex. 4"
+              className={inputClass(
+                Boolean(errors.nombre_sieges_par_rangee),
+              )}
             />
-
-            {errors.capacite && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.capacite.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="nombre_sieges_par_rangee"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Sièges par rangée *
-            </label>
-
-            <input
-              id="nombre_sieges_par_rangee"
-              type="number"
-              min="1"
-              {...register("nombre_sieges_par_rangee", {
-                valueAsNumber: true,
-              })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-            />
-
-            {errors.nombre_sieges_par_rangee && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.nombre_sieges_par_rangee.message}
-              </p>
-            )}
-          </div>
+          </FormField>
         </div>
       </section>
 
       {/* Équipements */}
-      <section className="space-y-4">
-        <h3 className="font-medium text-gray-900">
-          Équipements
-        </h3>
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+          <h2 className="text-base font-semibold text-slate-900">
+            Équipements
+          </h2>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
-            <input
-              type="checkbox"
-              {...register("climatisation")}
-              className="h-4 w-4 accent-sky-600"
-            />
-            <span className="text-sm text-gray-700">
-              Climatisation
-            </span>
-          </label>
+          <p className="mt-1 text-sm text-slate-500">
+            Sélectionnez les équipements disponibles dans le bus.
+          </p>
+        </div>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
-            <input
-              type="checkbox"
-              {...register("wifi")}
-              className="h-4 w-4 accent-sky-600"
-            />
-            <span className="text-sm text-gray-700">Wi-Fi</span>
-          </label>
+        <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
+          <BusFeatureCard
+            icon="❄️"
+            label="Climatisation"
+            description="Système de climatisation disponible."
+            enabled={formData.climatisation}
+            onChange={(value) =>
+              updateField("climatisation", value)
+            }
+          />
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
-            <input
-              type="checkbox"
-              {...register("prise_usb")}
-              className="h-4 w-4 accent-sky-600"
-            />
-            <span className="text-sm text-gray-700">
-              Prise USB
-            </span>
-          </label>
+          <BusFeatureCard
+            icon="📶"
+            label="Wi-Fi"
+            description="Connexion Wi-Fi disponible."
+            enabled={formData.wifi}
+            onChange={(value) =>
+              updateField("wifi", value)
+            }
+          />
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
-            <input
-              type="checkbox"
-              {...register("inclinaison_sieges")}
-              className="h-4 w-4 accent-sky-600"
-            />
-            <span className="text-sm text-gray-700">
-              Sièges inclinables
-            </span>
-          </label>
+          <BusFeatureCard
+            icon="🔌"
+            label="Prises USB"
+            description="Prises USB accessibles aux voyageurs."
+            enabled={formData.prise_usb}
+            onChange={(value) =>
+              updateField("prise_usb", value)
+            }
+          />
+
+          <BusFeatureCard
+            icon="💺"
+            label="Sièges inclinables"
+            description="Sièges permettant une inclinaison."
+            enabled={formData.inclinaison_sieges}
+            onChange={(value) =>
+              updateField("inclinaison_sieges", value)
+            }
+          />
         </div>
       </section>
 
       {/* Actions */}
-      <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Annuler
-        </button>
+      <div className="sticky bottom-0 z-10 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="mx-auto flex max-w-5xl flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ArrowLeft
+              className="h-4 w-4"
+              aria-hidden="true"
+            />
+            Annuler
+          </button>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting
-            ? "Enregistrement..."
-            : isEditing
-              ? "Enregistrer les modifications"
-              : "Ajouter le bus"}
-        </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <>
+                <span
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                  aria-hidden="true"
+                />
+                Enregistrement...
+              </>
+            ) : (
+              <>
+                <Save
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                />
+                Enregistrer le bus
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </form>
   );
+}
+
+interface FormFieldProps {
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+}
+
+function FormField({
+  label,
+  required = false,
+  error,
+  hint,
+  children,
+}: FormFieldProps) {
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-slate-700">
+        {label}
+
+        {required && (
+          <span
+            className="ml-1 text-red-500"
+            aria-hidden="true"
+          >
+            *
+          </span>
+        )}
+      </label>
+
+      {children}
+
+      {error ? (
+        <p
+          role="alert"
+          className="text-xs font-medium text-red-600"
+        >
+          {error}
+        </p>
+      ) : hint ? (
+        <p className="text-xs leading-5 text-slate-500">
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function inputClass(hasError: boolean) {
+  return [
+    "h-11 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none transition",
+    "placeholder:text-slate-400",
+    "focus:ring-2",
+    hasError
+      ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
+      : "border-slate-300 focus:border-sky-500 focus:ring-sky-500/20",
+  ].join(" ");
 }
