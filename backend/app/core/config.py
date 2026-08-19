@@ -1,0 +1,14 @@
+from supabase import Client, create_client
+
+from app.core.config import get_settings
+
+
+def get_supabase_client() -> Client:
+    """Crée le client Supabase utilisé par le backend YATIGO."""
+
+    settings = get_settings()
+
+    return create_client(
+        settings.supabase_url,
+        settings.supabase_service_role_key,
+    )

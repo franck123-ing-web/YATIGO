@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.routes.auth import router as auth_router
 from app.api.routes.bus import router as bus_router
 from app.core.error_handlers import (
     conflict_error_handler,
@@ -33,5 +34,10 @@ app.add_exception_handler(
 
 app.include_router(
     bus_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    auth_router,
     prefix="/api/v1",
 )
