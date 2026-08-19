@@ -4,12 +4,7 @@ from app.core.supabase import get_supabase_client
 
 
 class EmployeAgenceRepository:
-    """
-    Couche d'accès aux données des employés d'agence.
-
-    Cette classe ne contient aucune règle d'autorisation.
-    Elle récupère uniquement les données nécessaires.
-    """
+    """Accès aux données des employés d'agence."""
 
     TABLE_NAME = "employes_agence"
 
@@ -21,19 +16,18 @@ class EmployeAgenceRepository:
         utilisateur_id: UUID,
     ) -> dict | None:
         """
-        Récupère le profil employé associé à un utilisateur.
+        Recherche le profil employé correspondant à l'utilisateur.
         """
 
         response = (
             self.client
             .table(self.TABLE_NAME)
-            .select("*")
+            .select(
+                "id, agence_id, poste, statut, date_creation"
+            )
             .eq("id", str(utilisateur_id))
-            .limit(1)
+            .maybe_single()
             .execute()
         )
 
-        if not response.data:
-            return None
-
-        return response.data[0]
+        return response.data

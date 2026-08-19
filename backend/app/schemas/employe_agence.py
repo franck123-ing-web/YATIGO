@@ -5,18 +5,14 @@ from pydantic import BaseModel
 
 
 class RoleEmploye(str, Enum):
-    """
-    Rôles disponibles pour les employés d'une agence.
-    """
+    """Rôles disponibles pour les employés d'une agence."""
 
     AGENT = "AGENT"
     ADMINISTRATEUR = "ADMINISTRATEUR"
 
 
 class StatutEmploye(str, Enum):
-    """
-    Statuts possibles d'un employé d'agence.
-    """
+    """Statuts possibles d'un employé."""
 
     ACTIF = "ACTIF"
     SUSPENDU = "SUSPENDU"
@@ -25,9 +21,10 @@ class StatutEmploye(str, Enum):
 
 class EmployeAgenceContext(BaseModel):
     """
-    Informations minimales nécessaires au backend
-    pour connaître le contexte professionnel de
-    l'utilisateur actuellement authentifié.
+    Contexte de sécurité associé à l'utilisateur authentifié.
+
+    Ce contexte est construit exclusivement à partir des
+    données du backend et de la base de données.
     """
 
     utilisateur_id: UUID

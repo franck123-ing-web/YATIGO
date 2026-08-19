@@ -1,7 +1,7 @@
-from fastapi import Depends
-from fastapi import HTTPException, status
+from uuid import UUID
 
-from app.schemas.employe_agence import RoleEmploye
+from fastapi import Depends
+
 from app.core.auth import get_current_user_id
 from app.repositories.employe_agence_repository import (
     EmployeAgenceRepository,
@@ -12,39 +12,39 @@ from app.services.employe_agence_service import (
 )
 
 
-def get_employe_agence_context(
-    utilisateur_id=Depends(get_current_user_id),
-) -> EmployeAgenceContext:
+def get_employe_agence_service() -> EmployeAgenceService:
     """
-    Construit le contexte agence à partir de l'utilisateur
-    authentifié.
-
-    L'agence n'est jamais fournie directement par le client.
+    Construit le service employé avec son repository.
     """
 
-    service = EmployeAgenceService(
+    return EmployeAgenceService(
         repository=EmployeAgenceRepository(),
     )
 
-    return service.get_context(utilisateur_id)
 
-def require_administrateur(
-    contexte: EmployeAgenceContext = Depends(
-        get_employe_agence_context
+def get_employe_agence_context(
+    utilisateur_id: UUID = Depends(get_current_user_id),
+    service: EmployeAgenceService = Depends(
+        get_employe_agence_service,
     ),
 ) -> EmployeAgenceContext:
     """
-    Vérifie que l'employé possède les droits
-    d'administration nécessaires.
+    Construit le contexte agence de l'utilisateur authentifié.
     """
 
-    if contexte.poste != RoleEmploye.ADMINISTRATEUR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Cette opération nécessite les droits "
-                "d'administrateur."
-            ),
-        )
+    return service.get_context(utilisateur_id)
 
-    return contexte
+
+def require_administrateur(
+    contexte: EmployeAgenceContext = Depends(
+        get_employe_agence_context,
+    ),
+    service: EmployeAgenceService = Depends(
+        get_employe_agence_service,
+    ),
+) -> EmployeAgenceContext:
+    """
+    Autorise uniquement les employés administrateurs.
+    """
+
+    return service.require_administrateur(contexte)

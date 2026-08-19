@@ -8,20 +8,13 @@ from app.schemas.employe_agence import (
     RoleEmploye,
     StatutEmploye,
 )
-
-
-class EmployeAgenceNotFoundError(Exception):
-    """Profil employé introuvable."""
-
-
-class EmployeAgenceInactiveError(Exception):
-    """Employé non autorisé car son compte n'est pas actif."""
+from app.utils.exceptions import ForbiddenError, NotFoundError
 
 
 class EmployeAgenceService:
     """
-    Contient les règles liées au contexte professionnel
-    d'un utilisateur d'agence.
+    Contient les règles métier relatives au contexte
+    professionnel d'un utilisateur.
     """
 
     def __init__(
@@ -35,7 +28,9 @@ class EmployeAgenceService:
         utilisateur_id: UUID,
     ) -> EmployeAgenceContext:
         """
-        Construit le contexte agence de l'utilisateur.
+        Récupère le profil employé de l'utilisateur et
+        vérifie qu'il est actuellement autorisé à utiliser
+        les fonctionnalités de l'agence.
         """
 
         employe = self.repository.get_by_utilisateur_id(
@@ -43,14 +38,14 @@ class EmployeAgenceService:
         )
 
         if employe is None:
-            raise EmployeAgenceNotFoundError(
+            raise NotFoundError(
                 "Aucun profil employé associé à cet utilisateur."
             )
 
         statut = StatutEmploye(employe["statut"])
 
         if statut != StatutEmploye.ACTIF:
-            raise EmployeAgenceInactiveError(
+            raise ForbiddenError(
                 "Le compte employé n'est pas actif."
             )
 
@@ -60,3 +55,20 @@ class EmployeAgenceService:
             poste=RoleEmploye(employe["poste"]),
             statut=statut,
         )
+
+    def require_administrateur(
+        self,
+        contexte: EmployeAgenceContext,
+    ) -> EmployeAgenceContext:
+        """
+        Vérifie que l'employé possède le rôle administrateur.
+        """
+
+        if contexto := contexto:
+            if contexto.poste != RoleEmploye.ADMINISTRATEUR:
+                raise ForbiddenError(
+                    "Cette opération nécessite les droits "
+                    "d'administrateur."
+                )
+
+        return contexto
