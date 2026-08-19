@@ -2,14 +2,14 @@ from uuid import UUID
 
 from app.repositories.bus_repository import BusRepository
 from app.schemas.bus import BusCreate, BusUpdate
+from app.utils.exceptions import ConflictError, NotFoundError
+
+class BusNotFoundError(NotFoundError):
+    """Bus demandé introuvable."""
 
 
-class BusNotFoundError(Exception):
-    """Exception levée lorsqu'un bus demandé n'existe pas."""
-
-
-class BusAlreadyExistsError(Exception):
-    """Exception levée lorsqu'un bus existe déjà."""
+class BusAlreadyExistsError(ConflictError):
+    """Bus déjà existant."""
 
 
 class BusService:
