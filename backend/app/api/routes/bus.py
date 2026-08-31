@@ -11,6 +11,8 @@ router = APIRouter(
     tags=["Bus"],
 )
 
+# ID réel de l'agence que vous venez de créer en base de données
+FAKE_AGENCE_ID = UUID("fe22ddb9-0ac5-4513-95f6-448b0f67504a")
 
 def get_bus_service() -> BusService:
     """
@@ -57,9 +59,13 @@ def create_bus(
     lorsque l'authentification agence sera branchée.
     """
 
-    raise NotImplementedError(
-        "L'authentification agence doit être branchée "
-        "avant d'autoriser la création d'un bus."
+    #raise NotImplementedError(
+    #    "L'authentification agence doit être branchée "
+    #    "avant d'autoriser la création d'un bus."
+    #)
+    return service.create_bus(
+        agence_id=FAKE_AGENCE_ID, 
+        data=data
     )
 
 

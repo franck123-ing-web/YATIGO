@@ -1,4 +1,6 @@
 from uuid import UUID
+from postgrest.exceptions import APIError
+from fastapi import HTTPException
 
 from app.core.supabase import get_supabase_client
 
@@ -63,20 +65,18 @@ class BusRepository:
         data: dict,
     ) -> dict:
         """
-        Crée un nouveau bus.
+        Insère le bus et récupère l'enregistrement.
         """
-
         response = (
             self.client
             .table(self.TABLE_NAME)
             .insert(data)
+            .select()  # Indispensable pour remplir response.data
             .execute()
         )
 
         if not response.data:
-            raise RuntimeError(
-                "La création du bus n'a retourné aucune donnée."
-            )
+            raise RuntimeError("Le bus n'a pas pu être récupéré après insertion.")
 
         return response.data[0]
 
