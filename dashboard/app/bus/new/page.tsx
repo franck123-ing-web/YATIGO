@@ -1,7 +1,27 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
+import {
+  BusForm,
+  type BusFormData,
+} from "@/components/bus/BusForm";
+
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { BusForm } from "@/components/bus/BusForm";
 
 export default function NewBusPage() {
+  const router = useRouter();
+
+  async function handleSubmit(data: BusFormData) {
+    console.log("Bus à créer :", data);
+
+    // La connexion à l'API sera ajoutée après.
+  }
+
+  function handleCancel() {
+    router.push("/bus");
+  }
+
   return (
     <DashboardShell>
       <section className="space-y-6">
@@ -15,7 +35,11 @@ export default function NewBusPage() {
           </p>
         </div>
 
-        <BusForm />
+        <BusForm
+          mode="create"
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+        />
       </section>
     </DashboardShell>
   );

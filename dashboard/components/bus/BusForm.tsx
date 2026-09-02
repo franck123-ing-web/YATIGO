@@ -440,48 +440,47 @@ try {
       </section>
 
       {/* Actions */}
-      <div className="sticky bottom-0 z-10 -mx-4 border-t border-slate-200 bg-white/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
-        <div className="mx-auto flex max-w-5xl flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <ArrowLeft
-              className="h-4 w-4"
-              aria-hidden="true"
-            />
-            Annuler
-          </button>
+<div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <button
+    type="button"
+    onClick={onCancel}
+    disabled={isSubmitting}
+    className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    <ArrowLeft
+      className="h-4 w-4"
+      aria-hidden="true"
+    />
+    Annuler
+  </button>
 
-          <button
-  type="submit"
-  disabled={isSubmitting}
-  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
->
-  {isSubmitting ? (
-    <>
-      <span
-        className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-        aria-hidden="true"
-      />
-      Enregistrement...
-    </>
-  ) : (
-    <>
-      <Save
-        className="h-4 w-4"
-        aria-hidden="true"
-      />
-      {mode === "edit"
-        ? "Enregistrer les modifications"
-        : "Enregistrer le bus"}
-    </>
-  )}
-</button>
-        </div>
-      </div>
+  <button
+    type="submit"
+    disabled={isSubmitting}
+    className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+  >
+    {isSubmitting ? (
+      <>
+        <span
+          className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+          aria-hidden="true"
+        />
+        Enregistrement...
+      </>
+    ) : (
+      <>
+        <Save
+          className="h-4 w-4"
+          aria-hidden="true"
+        />
+
+        {mode === "edit"
+          ? "Enregistrer les modifications"
+          : "Enregistrer le bus"}
+      </>
+    )}
+  </button>
+</div>
     </form>
   );
 }
