@@ -1,21 +1,27 @@
 from fastapi import FastAPI
+
 from app.api.routes.auth import router as auth_router
 from app.api.routes.bus import router as bus_router
+from app.api.routes.trajet import router as trajet_router
+
 from app.core.error_handlers import (
     conflict_error_handler,
     forbidden_error_handler,
     not_found_error_handler,
 )
+
 from app.utils.exceptions import (
     ConflictError,
     ForbiddenError,
     NotFoundError,
 )
 
+
 app = FastAPI(
     title="YATIGO API",
     version="1.0.0",
 )
+
 
 app.add_exception_handler(
     NotFoundError,
@@ -32,8 +38,14 @@ app.add_exception_handler(
     forbidden_error_handler,
 )
 
+
 app.include_router(
     bus_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    trajet_router,
     prefix="/api/v1",
 )
 
