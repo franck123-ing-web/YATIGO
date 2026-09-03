@@ -226,7 +226,7 @@ export function TrajetForm() {
                 )
               }
               required
-              className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+              className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
             />
           </div>
 
@@ -239,18 +239,18 @@ export function TrajetForm() {
             </label>
 
             <input
-              id="heure_depart"
-              type="time"
-              value={formData.heure_depart}
-              onChange={(event) =>
-                updateField(
-                  "heure_depart",
-                  event.target.value,
-                )
-              }
-              required
-              className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-            />
+  id="heure_depart"
+  type="time"
+  value={formData.heure_depart}
+  onChange={(event) =>
+    updateField(
+      "heure_depart",
+      event.target.value,
+    )
+  }
+  required
+  className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+/>
           </div>
 
           <div>
@@ -262,79 +262,92 @@ export function TrajetForm() {
             </label>
 
             <input
-              id="heure_arrivee"
-              type="time"
-              value={formData.heure_arrivee_estimee}
-              onChange={(event) =>
-                updateField(
-                  "heure_arrivee_estimee",
-                  event.target.value,
-                )
-              }
-              className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-            />
+  id="heure_arrivee"
+  type="time"
+  value={formData.heure_arrivee_estimee}
+  onChange={(event) =>
+    updateField(
+      "heure_arrivee_estimee",
+      event.target.value,
+    )
+  }
+  className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+/>
           </div>
 
         </div>
       </div>
 
       {/* Prix et réservations */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-6">
-          <h2 className="text-base font-semibold text-slate-900">
-            Tarification et réservations
-          </h2>
+<div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div className="mb-6">
+    <h2 className="text-base font-semibold text-slate-900">
+      Tarification et réservations
+    </h2>
+  </div>
+
+  <div className="space-y-5">
+    {/* Prix */}
+<div className="max-w-xs">
+  <label
+    htmlFor="prix"
+    className="mb-2 block text-sm font-medium text-slate-700"
+  >
+    Prix du trajet
+  </label>
+
+  <div className="relative">
+    <input
+      id="prix"
+      type="number"
+      min="0"
+      step="1"
+      value={formData.prix}
+      onChange={(event) =>
+        updateField("prix", event.target.value)
+      }
+      placeholder="Ex. : 5 000"
+      required
+      className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 pr-16 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+    />
+
+    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400">
+      FCFA
+    </span>
+  </div>
+</div>
+
+    {/* Réservations */}
+    <div className="border-t border-slate-100 pt-5">
+      <label className="flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          checked={formData.reservations_ouvertes}
+          onChange={(event) =>
+            updateField(
+              "reservations_ouvertes",
+              event.target.checked,
+            )
+          }
+          className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+        />
+
+        <div>
+          <span className="block text-sm font-medium text-slate-700">
+            Autoriser les réservations dès maintenant
+          </span>
+
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Si cette option est activée, les voyageurs pourront
+            réserver des places sur ce trajet dès sa création.
+            Sinon, le trajet sera créé mais les réservations
+            resteront fermées jusqu'à leur ouverture.
+          </p>
         </div>
-
-        <div className="grid gap-5 md:grid-cols-2">
-
-          <div>
-            <label
-              htmlFor="prix"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Prix du trajet
-            </label>
-
-            <input
-              id="prix"
-              type="number"
-              min="0"
-              value={formData.prix}
-              onChange={(event) =>
-                updateField(
-                  "prix",
-                  event.target.value,
-                )
-              }
-              placeholder="Ex : 5000"
-              required
-              className="h-11 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-            />
-          </div>
-
-          <div className="flex items-center pt-8">
-            <label className="flex cursor-pointer items-center gap-3">
-              <input
-                type="checkbox"
-                checked={formData.reservations_ouvertes}
-                onChange={(event) =>
-                  updateField(
-                    "reservations_ouvertes",
-                    event.target.checked,
-                  )
-                }
-                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-              />
-
-              <span className="text-sm font-medium text-slate-700">
-                Ouvrir les réservations immédiatement
-              </span>
-            </label>
-          </div>
-
-        </div>
-      </div>
+      </label>
+    </div>
+  </div>
+</div>
 
       {/* Actions */}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
